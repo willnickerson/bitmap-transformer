@@ -35,6 +35,10 @@ Tests:
 * You may want to use "pinning" or "snapshot" tests for testing overall transformed bitmap
 * Be thoughtful about what to test (and what not to test!)
 
+API:
+
+Think about your library being used by another developer. Distinguish between the interface and your implementation.
+
 ### Rubric:
 * Tests: 3pts
 * npm scripts/package.json 2pts
@@ -44,7 +48,7 @@ Tests:
 
 ## Stretch Ideas For More Fun:
 
-* improve your "API" for interfacing with the transformer
+* improve your "API" for interfacing with the transformer (it probably could be better)
 * handle palette and non-palette bitmaps
 * can handle various sized bitmaps (handle padded rows for non-palette bitmaps)
 * create a command line interface
