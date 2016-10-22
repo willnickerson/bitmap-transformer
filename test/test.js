@@ -1,32 +1,60 @@
 'use strict';
-const assert = require('assert');
+const assert = require('chai').assert;
 const fs = require('fs');
-const fileRead = require('../lib/readFile.js');
-const bitMapBuffer = require('../lib/bitMapImage.js');
-
-// const Transform = require('stream').Transform;
+const fileSystem = require('../lib/fileSystem.js');
+const imageTransform = require('../lib/imageTransform.js');
 
 
-//checks to see if it can read the file buffer
-describe('it reads the buffer', () => {
+describe('transforms the bitmap and writes a new file', () => {
+  //deletes existing transformed bitmap file
+  it('deletes the existing transformed file', done => {
+    fileSystem.deleteFile('./transformedBitMap.bmp', () => {
+      assert.isNotOk(fs.existsSync('./transformedBitMap.bmp'));
+      done();
+    });
+  });
+  //checks to see if it can read the file buffer
   it('the buffer gets read', done => {
-    fileRead.readBuffer('non-palette-bitmap.bmp', (buffer) => {
+    fileSystem.readBuffer('non-palette-bitmap.bmp', (buffer) => {
       assert(buffer instanceof Buffer);
       done();
     });
   });
-  
+
+  //we know from bmp file documentation that the 10th offset dec in the header gives us the position where the pixels start, we need to make sure this returns an integer
+  it('grabs the proper header information', done => {
+    fileSystem.readBuffer('non-palette-bitmap.bmp', (buffer) => {
+      assert(Number.isInteger(imageTransform.getHeader(buffer)));
+      done();
+    });
+  });
+
+  //we know that to invert a given rgb value we subtract it from 255
+  it('properly transforms each pixel', done => {
+    fileSystem.readBuffer('non-palette-bitmap.bmp', buffer => {
+      var originalBuffer = [];
+      for(var i = 0; i < buffer.length; i++) {
+        originalBuffer.push(buffer[i]);
+      }
+      imageTransform.transformImage(buffer, imageTransform.getHeader(buffer), () => {
+        for(var i = imageTransform.getHeader(buffer); i < buffer.length; i++) {
+          assert.deepEqual(255 - originalBuffer[i], buffer[i]);
+        }
+        done();
+      });
+    });
+  });
+
+  //checks to see if we successfully create a file
   it('the file is written', done => {
-    fileRead.readBuffer('non-palette-bitmap.bmp', (buffer) => {
-      bitMapBuffer.transformImage(buffer, bitMapBuffer.getHeader(buffer), () => {
+    fileSystem.readBuffer('non-palette-bitmap.bmp', (buffer) => {
+      imageTransform.transformImage(buffer, imageTransform.getHeader(buffer), () => {
         console.log(buffer);
-        fileRead.createNewImage('transformedBitMap.bmp', buffer, () => {
+        fileSystem.createNewFile('transformedBitMap.bmp', buffer, () => {
           assert.ok(fs.existsSync('./transformedBitMap.bmp'));
           done();
         });
       });
     });
   });
-  //check to see if we can read header
-
 });
